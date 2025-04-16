@@ -7,7 +7,7 @@ import base64
 from typing import Optional, Dict
 
 LOCKER_DIR = os.path.join(os.getcwd(), 'locker')
-DB_PATH = r"C:\Users\aikan\Downloads\AdvancedProtectionSuite\Database\files.db"
+DB_PATH = r"path\to\Yuusha\Database\files.db"
 
 
 os.makedirs(LOCKER_DIR, exist_ok=True)
