@@ -321,3 +321,45 @@ graph TD
   - Connecting
   - Disconnected
   - Error
+
+
+# 🛡️ How to Run Yuusha Advanced Protection Suite
+
+This guide explains how to clone and run the **Yuusha Advanced Protection Suite** Flask application on your local machine.
+
+---
+
+## 📥 Step 1: Clone the Repository
+Use Git to clone the repository:
+```bash
+git clone https://github.com/CarbezonKARDE/Yuusha-AdvancedProtectionSuite.git
+cd Yuusha-AdvancedProtectionSuite
+```
+
+## 📦 Step 2: Install the Required Packages
+Install all dependencies listed in the requirements.txt file:
+```bash
+pip install -r requirements.txt
+```
+
+## ⚙️ Step 3: Run the Flask Application as Administrator
+🔐 **Important**: You must run the app with administrator privileges for full functionality (e.g., firewall control).
+
+On Windows:
+1. Open Command Prompt or PowerShell as Administrator.
+2. Navigate to the project directory.
+3. Run the Flask app:
+```bash
+python app.py
+```
+
+## 🌐 Access the App
+By default, the app runs at:
+🔗 http://127.0.0.1:5000
+
+## ✅ Done!
+Your Flask-based Advanced Protection Suite is now up and running!
+
+Make sure to test features like firewall rules and admin-only tools with elevated permissions.
+
+
