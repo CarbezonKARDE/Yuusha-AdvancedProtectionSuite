@@ -3,7 +3,7 @@ import sqlite3
 import hashlib
 import psutil
 
-DATABASE_PATH = r"C:\Users\aikan\Downloads\AdvancedProtectionSuite\Database\latestdata.db"
+DATABASE_PATH = r"path\to\Yuusha\Database\latestdata.db"
 
 def connect_to_database(db_path):
     """Connect to the SQLite hash database."""
