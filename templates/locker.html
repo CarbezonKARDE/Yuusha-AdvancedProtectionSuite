@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Locker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+        
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff2a6d;
+            --cyber-purple: #7a04eb;
+            --cyber-yellow: #ffd319;
+            --cyber-black: #0b0b0f;
+            --cyber-gray: #1a1a2e;
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+        
+        body {
+            background-color: var(--cyber-black);
+            color: #ffffff;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 20px;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink), var(--cyber-purple));
+            z-index: 1000;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.7);
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            position: relative;
+        }
+        
+        h1::after {
+            content: "_";
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .file-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        .file-table th, .file-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+        
+        .file-table th {
+            background-color: var(--cyber-purple);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        .file-table tr:hover {
+            background-color: rgba(122, 4, 235, 0.2);
+        }
+        
+        .status-encrypted {
+            color: var(--neon-pink);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 42, 109, 0.5);
+        }
+        
+        .status-decrypted {
+            color: var(--cyber-yellow);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 211, 25, 0.5);
+        }
+        
+        button {
+            background-color: var(--cyber-gray);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover {
+            background-color: var(--neon-blue);
+            color: var(--cyber-black);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.7);
+        }
+        
+        button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(rgba(255,255,255,0.1), transparent);
+            transform: rotate(30deg);
+            transition: all 0.3s;
+            opacity: 0;
+        }
+        
+        button:hover::after {
+            opacity: 1;
+        }
+        
+        input[type="file"] {
+            background-color: var(--cyber-gray);
+            color: white;
+            border-radius: 5px;
+            padding: 8px;
+            border: 1px dashed var(--neon-blue);
+            width: 100%;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        input[type="password"] {
+            background-color: var(--cyber-gray);
+            color: white;
+            border: 1px solid var(--neon-blue);
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            width: 100%;
+            box-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+        }
+        
+        input[type="password"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        input[type="checkbox"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background-color: var(--cyber-gray);
+            border: 1px solid var(--neon-blue);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            color: var(--neon-blue);
+            font-size: 16px;
+            top: 0;
+            left: 4px;
+        }
+        
+        .loading {
+            display: none;
+            color: var(--neon-blue);
+            margin-left: 10px;
+            animation: pulse 1.5s infinite;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .actions {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            border-left: 3px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .actions::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top right, rgba(122, 4, 235, 0.2), transparent 70%);
+        }
+        
+        .file-upload-label {
+            display: inline-block;
+            padding: 15px 30px;
+            border: 2px dashed var(--neon-blue);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+            background-color: rgba(26, 26, 46, 0.5);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--neon-pink);
+            background-color: rgba(122, 4, 235, 0.2);
+            box-shadow: 0 0 15px rgba(255, 42, 109, 0.3);
+        }
+
+        .file-upload-label::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(0, 243, 255, 0.1),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .file-upload-label:hover::before {
+            left: 100%;
+        }
+
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .home-button {
+            background-color: var(--cyber-gray);
+            border-color: var(--cyber-yellow) !important;
+            color: var(--cyber-yellow) !important;
+            margin-left: 20px;
+        }
+
+        .home-button:hover {
+            background-color: var(--cyber-yellow) !important;
+            color: var(--cyber-black) !important;
+            box-shadow: 0 0 15px rgba(255, 211, 25, 0.7) !important;
+        }
+
+        .actions:nth-child(2) {
+            border-left: 3px solid var(--neon-pink);
+        }
+        
+        /* For mobile responsiveness */
+        @media (max-width: 768px) {
+            .actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .file-table {
+                font-size: 0.9rem;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-container">
+        <h1>Secure File Locker</h1>
+        <a href="http://127.0.0.1:5000/">
+            <button class="home-button">Return Home</button>
+        </a>
+    </div>
+    
+    <div class="actions-section">
+        <div class="file-input-wrapper">
+            <label class="file-upload-label">
+                📁 Select Files to Encrypt
+                <input type="file" id="fileInput" multiple style="display: none;">
+            </label>
+            <input type="password" id="password" placeholder="Enter encryption password (min 8 characters)">
+            <button onclick="encryptFile()">Encrypt Selected Files</button>
+        </div>
+
+
+    
+
+    <div class="actions">
+        <button onclick="decryptSelected()">Decrypt Selected Files</button>
+        <button onclick="encryptSelected()">Encrypt Selected Files</button>
+        <span class="loading" id="decryptLoading">Decrypting...</span>
+        <span class="loading" id="encryptLoading">Encrypting...</span>
+        <button onclick="cleanupDatabase()" style="background-color: rgba(26,26,46,0.8); border-color: var(--cyber-yellow);">Cleanup Database</button>
+    </div>
+
+    <table class="file-table">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>File Name</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Size</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="fileTableBody"></tbody>
+    </table>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                document.getElementById('fileLabel').textContent = `📁 ${files.length} file(s) selected`;
+            } else {
+                document.getElementById('fileLabel').textContent = '📁 Choose File(s)';
+            }
+        });
+
+        document.getElementById('selectAll').addEventListener('change', function () {
+            const isChecked = this.checked;
+            document.querySelectorAll('.fileCheckbox').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        });
+
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('fileCheckbox')) {
+                const allCheckboxes = document.querySelectorAll('.fileCheckbox');
+                const checkedBoxes = document.querySelectorAll('.fileCheckbox:checked');
+                document.getElementById('selectAll').checked = allCheckboxes.length === checkedBoxes.length;
+            }
+        });
+
+        // FIXED PASSWORD INPUT HANDLING
+        document.getElementById('password').addEventListener('focus', function() {
+            this.style.borderColor = 'var(--neon-pink)';
+        });
+
+        document.getElementById('password').addEventListener('blur', function() {
+            this.style.borderColor = 'var(--neon-blue)';
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const fileInput = document.getElementById("fileInput");
+            const fileLabel = document.getElementById("fileLabel");
+            const passwordInput = document.getElementById("password");
+            const encryptBtn = document.getElementById("encryptBtn");
+            
+            // FILE INPUT CLICK FIX
+            fileLabel.addEventListener("click", function() {
+                fileInput.click();
+            });
+
+            // DEBUG FILE SELECTION
+            fileInput.addEventListener("change", function() {
+                if (this.files.length > 0) {
+                    alert(`Selected ${this.files.length} file(s): ${Array.from(this.files).map(f => f.name).join(", ")}`);
+                } else {
+                    alert("No file selected");
+                }
+            });
+
+            // PASSWORD INPUT TEST
+            passwordInput.addEventListener("input", function() {
+                console.log("Password entered:", passwordInput.value);
+            });
+
+            // ENCRYPT BUTTON TEST
+            encryptBtn.addEventListener("click", function() {
+                if (!fileInput.files.length) {
+                    alert("Please select a file!");
+                    return;
+                }
+                
+                if (!passwordInput.value || passwordInput.value.length < 8) {
+                    alert("Password must be at least 8 characters.");
+                    return;
+                }
+
+                alert("Ready to encrypt!");
+            });
+        });
+
+
+        function loadFiles() {
+            fetch('/locker/files')
+                .then(response => response.json())
+                .then(files => {
+                    const tbody = document.getElementById('fileTableBody');
+                    tbody.innerHTML = files.map(file => `
+                        <tr>
+                            <td><input type="checkbox" class="fileCheckbox" value="${file.filename}"></td>
+                            <td>${file.original_name}</td>
+                            <td>${file.extension}</td>
+                            <td class="${file.status === 'Encrypted' ? 'status-encrypted' : 'status-decrypted'}">
+                                ${file.status}
+                            </td>
+                            <td>${file.size}</td>
+                            <td>
+                                <button data-filename="${file.filename}" 
+                                        data-action="${file.status === 'Encrypted' ? 'decrypt' : 'encrypt'}"
+                                        onclick="handleFileAction(this)">
+                                    ${file.status === 'Encrypted' ? 'Decrypt' : 'Encrypt'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
+
+        function handleFileAction(button) {
+            const filename = button.dataset.filename;
+            const action = button.dataset.action;
+            const password = prompt(`Enter password to ${action}:`);
+            if (!password) return;
+
+            const loading = document.getElementById(action === 'encrypt' ? 'encryptLoading' : 'decryptLoading');
+            loading.style.display = 'inline';
+
+            const endpoint = action === 'encrypt' ? '/locker/reencrypt' : '/locker/decrypt';
+            const payload = action === 'encrypt' 
+                ? { filename: filename, password: password }
+                : { filenames: [filename], password: password };
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Server Response:", data); // Log server response
+                if (data.success) {
+                    alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+                    loadFiles();
+                } else {
+                    alert(`${action.charAt(0).toUpperCase() + action.slice(1)} failed: ${data.error || 'Invalid password'}`);
+                }
+            })
+            .catch(error => {
+                alert(`${action.charAt(0).toUpperCase() + action.slice(1)} Error: ${error.message}`);
+            })
+            .finally(() => {
+                loading.style.display = 'none';
+            });
+        }
+
+
+        function encryptFile() {
+            const fileInput = document.getElementById('fileInput');
+            const password = document.getElementById('password').value;
+            const loading = document.getElementById('encryptLoading');
+            
+            if (!fileInput.files.length || !password || password.length < 8) {
+                alert('Please select files and enter valid password (min 8 characters)');
+                return;
+            }
+
+            loading.style.display = 'inline';
+            const formData = new FormData();
+            formData.append('password', password);
+            Array.from(fileInput.files).forEach(file => formData.append('files', file));
+
+            fetch('/locker/encrypt', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                alert('Files encrypted successfully!');
+                fileInput.value = '';
+                document.getElementById('password').value = '';
+                loadFiles();
+            })
+            .catch(error => alert(`Encryption failed: ${error.message}`))
+            .finally(() => loading.style.display = 'none');
+        }
+
+        function decryptSelected() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked:not(#selectAll)');
+            const password = prompt('Enter decryption password:');
+            const loading = document.getElementById('decryptLoading');
+            
+            if (!checkboxes.length || !password) {
+                alert('Please select files and enter password');
+                return;
+            }
+
+            loading.style.display = 'inline';
+            const filenames = Array.from(checkboxes).map(cb => cb.value);
+
+            fetch('/locker/decrypt', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ filenames, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const failed = data.results.filter(r => !r.success);
+                alert(failed.length ? 
+                    `${failed.length} file(s) failed to decrypt` : 
+                    'All files decrypted successfully!');
+                loadFiles();
+            })
+            .catch(error => alert(`Decryption failed: ${error.message}`))
+            .finally(() => loading.style.display = 'none');
+        }
+
+        function encryptSelected() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked:not(#selectAll)');
+            const password = prompt('Enter encryption password:');
+            const loading = document.getElementById('encryptLoading');
+            
+            if (!checkboxes.length || !password) {
+                alert('Please select files and enter password');
+                return;
+            }
+
+            loading.style.display = 'inline';
+            const filenames = Array.from(checkboxes).map(cb => cb.value);
+
+            fetch('/locker/bulk-reencrypt', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    filenames: filenames,
+                    password: password
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                const failed = data.results.filter(r => !r.success);
+                if (failed.length === 0) {
+                    alert('All selected files encrypted successfully!');
+                } else {
+                    const failedNames = failed.map(f => f.filename).join(', ');
+                    alert(`Failed to encrypt: ${failedNames}`);
+                }
+                loadFiles();
+            })
+            .catch(error => {
+                alert(`Encryption failed: ${error.message}`);
+            })
+            .finally(() => {
+                loading.style.display = 'none';
+            });
+        }
+
+        function cleanupDatabase() {
+            fetch('/locker/cleanup', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Removed ${data.removed} orphaned entries`);
+                        loadFiles();
+                    } else {
+                        throw new Error(data.error);
+                    }
+                })
+                .catch(error => alert(`Cleanup failed: ${error.message}`));
+        }
+
+        // Initial load
+        loadFiles();
+        setInterval(loadFiles, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --primary-dark: #0072ff;
+            --danger: #ff3860;
+            --success: #36d7b7;
+            --dark: #0a0a0f;
+            --card-bg: rgba(20, 20, 25, 0.5);
+            --border-glow: rgba(0, 198, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(66, 39, 90, 0.3) 0%, rgba(0, 0, 0, 1) 70%);
+            z-index: -1;
+        }
+        
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=');
+            z-index: -1;
+            opacity: 0.2;
+        }
+        
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(transparent 98%, rgba(0, 198, 255, 0.1) 2%),
+                            linear-gradient(90deg, transparent 98%, rgba(0, 198, 255, 0.1) 2%);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(99, 99, 99, 0.18);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            margin: 0;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .scan-controls {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.95rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-primary {
+            background: rgba(0, 198, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--border-glow);
+        }
+
+        .btn-primary:hover {
+            background: rgba(0, 198, 255, 0.3);
+            box-shadow: 0 0 15px var(--border-glow);
+        }
+
+        .btn-danger {
+            background: rgba(255, 56, 96, 0.2);
+            color: var(--danger);
+            border: 1px solid rgba(255, 56, 96, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 56, 96, 0.3);
+            box-shadow: 0 0 15px rgba(255, 56, 96, 0.3);
+        }
+
+        .btn-success {
+            background: rgba(54, 215, 183, 0.2);
+            color: var(--success);
+            border: 1px solid rgba(54, 215, 183, 0.3);
+        }
+
+        .btn-success:hover {
+            background: rgba(54, 215, 183, 0.3);
+            box-shadow: 0 0 15px rgba(54, 215, 183, 0.3);
+        }
+
+        .path-display {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 1rem 0;
+            word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .progress-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* New styling for different states of the progress bar */
+        .progress-bar.scanning {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            background-size: 200% 100%;
+            animation: progressAnimation 2s linear infinite;
+        }
+        
+        .progress-bar.completed {
+            background: linear-gradient(90deg, var(--success), var(--success));
+            animation: none;
+        }
+        
+        @keyframes progressAnimation {
+            0% { background-position: 100% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--border-glow);
+            box-shadow: 0 10px 25px rgba(0, 198, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .threat-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .threat-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .threat-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .threat-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 198, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .threat-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 198, 255, 0.5);
+        }
+
+        .threat-item {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .threat-item:hover {
+            background: rgba(255, 56, 96, 0.1);
+        }
+
+        .threat-item strong {
+            color: #fff;
+        }
+
+        .threat-item small {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 30px rgba(0, 198, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .redirect-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .redirect-button:hover {
+            background: rgba(0, 198, 255, 0.2);
+            border-color: var(--border-glow);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.3);
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 1rem;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--border-glow);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.2);
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .browse-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .path-examples {
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .scan-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+    <div class="noise"></div>
+    <div class="cyber-grid"></div>
+    
+    <button class="redirect-button" onclick="window.location.href='http://127.0.0.1:5000/'">Go to Home</button>
+    <div class="container">
+        <div class="header">
+            <h1>File Scanner</h1>
+            <button class="btn-danger" onclick="stopScan()">Stop Scan</button>
+        </div>
+
+        <div class="scan-controls">
+            <div>
+                <button class="btn-primary" onclick="showScannerModal()">Custom Scan</button>
+                <button class="btn-success" onclick="startFullScan()">Full System Scan</button>
+            </div>
+        </div>
+
+        <div class="path-display" id="selectedPath">
+            No path selected
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar scanning" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>Files Scanned</div>
+                <div class="stat-value" id="filesScanned">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Threats Found</div>
+                <div class="stat-value" id="threatsFound">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Scan Speed</div>
+                <div class="stat-value" id="scanSpeed">0</div>
+                <div class="stat-label">files per second</div>
+            </div>
+            <div class="stat-card">
+                <div>Time Elapsed</div>
+                <div class="stat-value" id="timeElapsed">0:00</div>
+            </div>
+        </div>
+
+        <h3>Detected Threats</h3>
+        <div class="threat-list" id="threatList">
+            <div class="threat-item" style="color: #666; justify-content: center;">
+                No threats detected
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Type Modal -->
+    <div class="modal" id="scannerModal">
+        <div class="modal-content">
+            <h3>Select Scan Type</h3>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="showPathInputModal('file')">Scan File</button>
+                <button class="btn-primary" onclick="showPathInputModal('folder')">Scan Folder</button>
+                <button class="btn-danger" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Path Input Modal -->
+    <div class="modal" id="pathInputModal">
+        <div class="modal-content">
+            <h3 id="pathModalTitle">Enter Path to Scan</h3>
+            
+            <label class="input-label">Path:</label>
+            <div class="browse-wrapper">
+                <input type="text" id="pathInput" class="input-field" placeholder="e.g., C:\Users\Documents\file.txt">
+                <button class="btn-primary" onclick="browsePath()" id="browseButton">Browse</button>
+            </div>
+            
+            <div class="path-examples">
+                <p>Examples:</p>
+                <p>- File: C:\Users\Username\Documents\file.txt</p>
+                <p>- Folder: C:\Users\Username\Documents</p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn-success" onclick="startScanWithPath()">Start Scan</button>
+                <button class="btn-danger" onclick="closePathModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Inputs -->
+    <input type="file" id="fileInput" hidden>
+    <input type="file" id="folderInput" webkitdirectory hidden>
+
+    <script>
+        let eventSource;
+        let scanStartTime;
+        let currentScanType = 'file';
+        let isScanActive = false;
+    
+        function showScannerModal() {
+            document.getElementById('scannerModal').style.display = 'flex';
+        }
+    
+        function closeModal() {
+            document.getElementById('scannerModal').style.display = 'none';
+        }
+
+        function showPathInputModal(type) {
+            currentScanType = type;
+            document.getElementById('pathModalTitle').textContent = type === 'file' ? 'Enter File Path to Scan' : 'Enter Folder Path to Scan';
+            document.getElementById('pathInput').placeholder = type === 'file' ? 'e.g., C:\\Users\\Documents\\file.txt' : 'e.g., C:\\Users\\Documents';
+            document.getElementById('browseButton').textContent = type === 'file' ? 'Browse Files' : 'Browse Folders';
+            
+            closeModal();
+            document.getElementById('pathInputModal').style.display = 'flex';
+        }
+
+        function closePathModal() {
+            document.getElementById('pathInputModal').style.display = 'none';
+        }
+
+        function browsePath() {
+            if (currentScanType === 'file') {
+                document.getElementById('fileInput').click();
+            } else {
+                document.getElementById('folderInput').click();
+            }
+        }
+
+        function startScanWithPath() {
+            const path = document.getElementById('pathInput').value.trim();
+            
+            if (!path) {
+                alert('Please enter a valid path');
+                return;
+            }
+            
+            document.getElementById('selectedPath').textContent = path;
+            closePathModal();
+            startScan(currentScanType, path);
+        }
+    
+        // Handle file selection for the browse button
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                // Set a fake path that looks like a Windows path based on the file name
+                document.getElementById('pathInput').value = `C:\\Users\\Documents\\${file.name}`;
+            }
+        });
+
+        // Handle folder selection for the browse button
+        document.getElementById('folderInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                // Get the first file's path and extract the directory
+                const file = e.target.files[0];
+                const pathParts = file.webkitRelativePath.split('/');
+                // Set a fake path that looks like a Windows path
+                document.getElementById('pathInput').value = `C:\\Users\\Documents\\${pathParts[0]}`;
+            }
+        });
+
+        function startFullScan() {
+            if(confirm('WARNING: Full system scan will scan your entire C: drive. This may take a long time.\n\nAre you sure you want to continue?')) {
+                const systemPath = 'C:\\'; // Just use single-escaped path
+                document.getElementById('selectedPath').textContent = systemPath;
+                startScan('full', systemPath);
+            }
+        }
+    
+        function startScan(type, path) {
+            // Reset UI
+            document.getElementById('threatList').innerHTML = `
+                <div class="threat-item" style="color: #666; justify-content: center;">
+                    No threats detected
+                </div>
+            `;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = '0%';
+            progressBar.className = 'progress-bar scanning'; // Set to scanning state
+            
+            document.getElementById('filesScanned').textContent = '0';
+            document.getElementById('threatsFound').textContent = '0';
+            document.getElementById('scanSpeed').textContent = '0';
+            document.getElementById('timeElapsed').textContent = '0:00';
+            scanStartTime = Date.now();
+            isScanActive = true;
+    
+            axios.post('/file_scan/start', {
+                type: type,
+                path: path
+            }).then(response => {
+                setupEventSource();
+            }).catch(error => {
+                isScanActive = false;
+                progressBar.className = 'progress-bar'; // Reset progress bar state
+                alert(`Error: ${error.response?.data?.message || error.message}`);
+            });
+        }
+        
+        function setupEventSource() {
+            eventSource = new EventSource('/file_scan/status');
+            
+            eventSource.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                const progressBar = document.getElementById('progressBar');
+                
+                if(data.status === 'completed' || data.status === 'error') {
+                    eventSource.close();
+                    isScanActive = false;
+                    
+                    if(data.status === 'completed') {
+                        // Set progress bar to 100% and change to completed state
+                        progressBar.style.width = '100%';
+                        progressBar.className = 'progress-bar completed';
+                    } else {
+                        // Reset progress bar if there was an error
+                        progressBar.className = 'progress-bar';
+                        alert(data.message);
+                    }
+                    return;
+                }
+
+                // Update progress
+                const progress = data.total_files > 0 ? 
+                    (data.total_scanned / data.total_files * 100) : 0;
+                progressBar.style.width = `${progress}%`;
+
+                // Ensure the scanning animation is applied while active
+                if(isScanActive && !progressBar.classList.contains('scanning')) {
+                    progressBar.classList.add('scanning');
+                }
+
+                // Update stats
+                document.getElementById('filesScanned').textContent = data.total_scanned;
+                document.getElementById('threatsFound').textContent = data.malicious_count;
+                document.getElementById('scanSpeed').textContent = data.files_per_second.toFixed(1);
+
+                // Update time
+                const elapsed = Math.floor((Date.now() - scanStartTime) / 1000);
+                document.getElementById('timeElapsed').textContent = 
+                    `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
+
+                // Update threats
+                if(data.malicious_files.length > 0) {
+                    const threatList = document.getElementById('threatList');
+                    threatList.innerHTML = '';
+                    data.malicious_files.forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = 'threat-item';
+                        div.innerHTML = `
+                            <div>
+                                <strong>${file[0]}</strong><br>
+                                <small>${file[1]}</small>
+                            </div>
+                            <div>${file[2]}</div>
+                        `;
+                        threatList.appendChild(div);
+                    });
+                }
+            };
+        }
+    
+        function stopScan() {
+            if(eventSource) {
+                axios.post('/file_scan/stop');
+                eventSource.close();
+                isScanActive = false;
+                
+                // Reset progress bar
+                const progressBar = document.getElementById('progressBar');
+                progressBar.className = 'progress-bar';
+            }
+        }
+    </script>
+</body>
+</html>

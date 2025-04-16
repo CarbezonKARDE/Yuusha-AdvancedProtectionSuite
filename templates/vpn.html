@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuusha VPN | Secure Network Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00a0;
+            --neon-purple: #9600ff;
+            --dark-bg: #0a0b14;
+            --panel-bg: #14152b;
+            --text-color: #d7e0f0;
+            --success-color: #0cff70;
+            --warning-color: #ffbb00;
+            --danger-color: #ff3860;
+        }
+
+        @font-face {
+            font-family: 'Cyberpunk';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/oxanium/6.0.0/Oxanium-Regular.ttf');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cyberpunk', 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            background-image: 
+                radial-gradient(circle at 20% 35%, rgba(0, 243, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 75% 44%, rgba(150, 0, 255, 0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .header:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-pink), var(--neon-blue), transparent);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--neon-blue);
+            margin: 25px 0 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        .status-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-info {
+            flex: 1;
+        }
+
+        .status-display {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #555;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .connection-details {
+            font-size: 0.95rem;
+            color: rgba(215, 224, 240, 0.7);
+            margin-top: 5px;
+        }
+
+        .btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--neon-blue);
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            outline: none;
+        }
+
+        .btn:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--neon-blue);
+            z-index: -2;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover:after {
+            transform: scaleX(1);
+        }
+
+        .btn:hover {
+            color: var(--dark-bg);
+            text-shadow: none;
+        }
+
+        .btn-disconnect {
+            border-color: var(--danger-color);
+        }
+
+        .btn-disconnect:after {
+            background-color: var(--danger-color);
+        }
+
+        .connect-btn {
+            border-color: var(--success-color);
+        }
+
+        .connect-btn:after {
+            background-color: var(--success-color);
+        }
+
+        .btn-home {
+            border-color: var(--neon-purple);
+            margin-right: 10px;
+        }
+
+        .btn-home:after {
+            background-color: var(--neon-purple);
+        }
+
+        .top-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .profiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .profile-card {
+            background-color: rgba(20, 21, 43, 0.8);
+            border-radius: 6px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 120px;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-blue);
+        }
+
+        .profile-name {
+            font-size: 1.1rem;
+            color: var(--neon-pink);
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        /* Status classes */
+        .status.connected .status-indicator {
+            background-color: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        .status.connecting .status-indicator {
+            background-color: var(--warning-color);
+            box-shadow: 0 0 10px var(--warning-color);
+            animation: pulse 1s infinite;
+        }
+
+        .no-profiles {
+            text-align: center;
+            padding: 30px;
+            color: rgba(215, 224, 240, 0.6);
+            font-style: italic;
+        }
+
+        /* Animation keyframes */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .profiles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-card {
+                height: auto;
+                min-height: 100px;
+            }
+            
+            .status-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .status-actions {
+                margin-top: 15px;
+                align-self: flex-end;
+            }
+
+            .top-actions {
+                position: relative;
+                top: 0;
+                right: 0;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-actions">
+            <a href="http://127.0.0.1:5000/" class="btn btn-home">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+
+        <div class="header">
+            <h1>Yuusha VPN</h1>
+            <div>Secure Network Interface</div>
+        </div>
+        
+        <div id="status-container" class="panel status-panel status {{ 'connected' if status.status == 'Connected' else 'connecting' if status.status == 'Connecting...' else '' }}">
+            <div class="status-info">
+                <div class="status-display">
+                    <div class="status-indicator"></div>
+                    <span id="status">{{ status.status }}</span>
+                </div>
+                
+                {% if status.active_connection %}
+                <div class="connection-details">
+                    <i class="fas fa-shield-alt"></i> Active Link: <span style="color: var(--neon-pink);">{{ status.active_connection }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="status-actions">
+                {% if status.active_connection %}
+                <form method="post" action="/vpn/disconnect" style="display: inline;">
+                    <button type="submit" class="btn btn-disconnect">
+                        <i class="fas fa-power-off"></i> Disconnect
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h2><i class="fas fa-network-wired"></i> Network Profiles</h2>
+        <div class="panel">
+            <div class="profiles-grid">
+                {% if ovpn_files %}
+                    {% for file in ovpn_files %}
+                        <div class="profile-card">
+                            <div class="profile-name">{{ file }}</div>
+                            <form method="post" action="/vpn/connect">
+                                <input type="hidden" name="profile" value="{{ file }}">
+                                <button type="submit" class="btn connect-btn">
+                                    <i class="fas fa-plug"></i> Connect
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-profiles">
+                        <i class="fas fa-exclamation-triangle"></i> No .ovpn files detected. Please verify your configuration or add profiles.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update status every 2 seconds
+        setInterval(function() {
+            fetch('/vpn/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').textContent = data.status;
+                    const statusContainer = document.getElementById('status-container');
+                    
+                    // Reset class
+                    statusContainer.className = 'panel status-panel status';
+                    
+                    // Add appropriate class based on status
+                    if (data.status === 'Connected') {
+                        statusContainer.classList.add('connected');
+                    } else if (data.status === 'Connecting...') {
+                        statusContainer.classList.add('connecting');
+                    }
+                    
+                    // Update connection details
+                    const connectionDetailsExist = document.querySelector('.connection-details');
+                    if (data.active_connection) {
+                        if (connectionDetailsExist) {
+                            connectionDetailsExist.innerHTML = `<i class="fas fa-shield-alt"></i> Active Link: <span style="color: var(--neon-pink);">${data.active_connection}</span>`;
+                        } else {
+                            const statusInfo = document.querySelector('.status-info');
+                            const connectionDetails = document.createElement('div');
+                            connectionDetails.className = 'connection-details';
+                            connectionDetails.innerHTML = `<i class="fas fa-shield-alt"></i> Active Link: <span style="color: var(--neon-pink);">${data.active_connection}</span>`;
+                            statusInfo.appendChild(connectionDetails);
+                        }
+                        
+                        // Make sure disconnect button exists
+                        if (!document.querySelector('.btn-disconnect')) {
+                            const statusActions = document.querySelector('.status-actions');
+                            statusActions.innerHTML = `
+                                <form method="post" action="/vpn/disconnect" style="display: inline;">
+                                    <button type="submit" class="btn btn-disconnect">
+                                        <i class="fas fa-power-off"></i> Disconnect
+                                    </button>
+                                </form>
+                            `;
+                        }
+                    } else {
+                        // Remove connection details if they exist
+                        if (connectionDetailsExist) {
+                            connectionDetailsExist.remove();
+                        }
+                        
+                        // Remove disconnect button if it exists
+                        const disconnectBtn = document.querySelector('.btn-disconnect');
+                        if (disconnectBtn && disconnectBtn.parentElement) {
+                            disconnectBtn.parentElement.remove();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }, 2000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-dark: #000000;
+            --primary-light: #ffffff;
+            --accent-neon: #00ffaa;
+            --accent-purple: #5e17eb;
+            --accent-blue: #0070f3;
+            --danger: #ff2d55;
+            --success: #34c759;
+            --warning: #ffcc00;
+            --info: #00b9f1;
+            --glass-bg: rgba(20, 20, 20, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+            color: var(--primary-light);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-weight: 660;
+            font-size: 36px;
+            margin: 30px 0 0 30px;
+            background: linear-gradient(to right, var(--accent-neon), var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        
+        h3 {
+            font-weight: 550;
+            font-size: 20px;
+            margin: 0 0 15px 0;
+            letter-spacing: -0.3px;
+            color: var(--primary-light);
+        }
+        
+        .home-button {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            z-index: 1000;
+            font-weight: 500;
+            box-shadow: 0 8px 20px rgba(0, 112, 243, 0.3),
+                        0 0 15px rgba(94, 23, 235, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 112, 243, 0.4),
+                        0 0 20px rgba(94, 23, 235, 0.3);
+        }
+        
+        .dashboard { 
+            position: fixed;
+            top: 100px;
+            bottom: 30px;
+            left: 30px;
+            right: 30px;
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 25px;
+        }
+        
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .chart-container,
+        .stats-container,
+        .table-container { 
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-container::before,
+        .stats-container::before,
+        .table-container::before {
+            content: "";
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, var(--accent-neon), var(--accent-purple), var(--accent-blue), var(--accent-neon));
+            z-index: -1;
+            border-radius: 18px;
+            filter: blur(10px);
+            opacity: 0.15;
+            animation: glow 8s linear infinite;
+        }
+
+
+        #systemChart {
+            position: absolute;
+            width: calc(100% - 50px);
+            height: calc(100% - 50px);
+        }
+
+        .chart-container,
+        .stats-container,
+        .table-container { 
+            position: relative;
+        }
+        
+        @keyframes glow {
+            0% { filter: blur(10px); opacity: 0.15; }
+            50% { filter: blur(15px); opacity: 0.25; }
+            100% { filter: blur(10px); opacity: 0.15; }
+        }
+        
+        .chart-container { 
+            height: 60%;
+        }
+        
+        .stats-container {
+            height: 35%;
+        }
+        
+        .table-container {
+            height: 92%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .system-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 15px;
+            opacity: 0.8;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .cpu-stat .stat-value {
+            color: #4e73df;
+        }
+        
+        .read-stat .stat-value {
+            color: #1cc88a;
+        }
+        
+        .write-stat .stat-value {
+            color: #36b9cc;
+        }
+        
+        table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        
+        th, td { 
+            padding: 14px 16px; 
+            text-align: left; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        
+        th { 
+            background: linear-gradient(90deg, rgba(94, 23, 235, 0.5), rgba(0, 112, 243, 0.5));
+            color: var(--primary-light);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .power-cell { 
+            font-weight: 600; 
+            border-radius: 6px;
+            padding: 4px 10px;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .scrollable-table {
+            overflow-y: auto;
+            height: calc(100% - 40px); /* Account for header space */
+            position: relative;
+        }
+        
+        .Very-High { 
+            background-color: rgba(220, 53, 69, 0.2); 
+            color: #ff3b45; 
+        }
+        
+        .High { 
+            background-color: rgba(255, 193, 7, 0.2); 
+            color: #ffd43b; 
+        }
+        
+        .Moderate { 
+            background-color: rgba(23, 162, 184, 0.2); 
+            color: #5adaff; 
+        }
+        
+        .Low { 
+            background-color: rgba(40, 167, 69, 0.2); 
+            color: #42e367; 
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-purple);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7b47fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>System Task Manager</h1>
+    <a href="/" class="home-button">Home</a>
+    
+    <div class="dashboard">
+        <!-- Left Column -->
+        <div class="left-column">
+            <div class="chart-container">
+                <canvas id="systemChart"></canvas>
+            </div>
+            <div class="stats-container">
+                <h3>System Overview</h3>
+                <div id="systemStats">
+                    <div class="system-stat cpu-stat">
+                        <span class="stat-label">Total CPU Usage</span>
+                        <span class="stat-value"><span id="totalCpu">0</span>%</span>
+                    </div>
+                    <div class="system-stat read-stat">
+                        <span class="stat-label">Disk Read</span>
+                        <span class="stat-value"><span id="totalRead">0</span> MB/s</span>
+                    </div>
+                    <div class="system-stat write-stat">
+                        <span class="stat-label">Disk Write</span>
+                        <span class="stat-value"><span id="totalWrite">0</span> MB/s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="table-container">
+            <div class="scrollable-table">
+                <table id="processTable">
+                    <thead>
+                        <tr>
+                            <th>Process Name</th>
+                            <th>CPU (%)</th>
+                            <th>Power Usage</th>
+                            <th>Disk Read</th>
+                            <th>Disk Write</th>
+                        </tr>
+                    </thead>
+                    <tbody id="processList">
+                        <!-- Processes will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const ctx = document.getElementById('systemChart').getContext('2d');
+        
+        // Custom chart configuration for cyberpunk theme
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+        
+        const systemChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'CPU Usage (%)',
+                    data: [],
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#4e73df',
+                    pointRadius: 3,
+                    tension: 0.2,
+                    fill: true
+                }, {
+                    label: 'Disk Read (MB/s)',
+                    data: [],
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#1cc88a',
+                    pointBorderColor: '#1cc88a',
+                    pointRadius: 3,
+                    tension: 0.2,
+                    fill: true
+                }, {
+                    label: 'Disk Write (MB/s)',
+                    data: [],
+                    borderColor: '#36b9cc',
+                    backgroundColor: 'rgba(54, 185, 204, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#36b9cc',
+                    pointBorderColor: '#36b9cc',
+                    pointRadius: 3,
+                    tension: 0.2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            font: {
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // SSE connection for real-time updates
+        const eventSource = new EventSource('/task_manager/data');
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            // Update system stats
+            document.getElementById('totalCpu').textContent = data.cpu.toFixed(1);
+            document.getElementById('totalRead').textContent = data.read.toFixed(2);
+            document.getElementById('totalWrite').textContent = data.write.toFixed(2);
+
+            // Update charts
+            const time = new Date().toLocaleTimeString();
+            systemChart.data.labels.push(time);
+            systemChart.data.datasets[0].data.push(data.cpu);
+            systemChart.data.datasets[1].data.push(data.read);
+            systemChart.data.datasets[2].data.push(data.write);
+            
+            // Keep only last 20 data points
+            if (systemChart.data.labels.length > 20) {
+                systemChart.data.labels.shift();
+                systemChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            systemChart.update();
+
+            // Update process list
+            const processList = document.getElementById('processList');
+            processList.innerHTML = '';
+            
+            data.processes.forEach(proc => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${proc[0]}</td>
+                    <td>${proc[1].toFixed(1)}</td>
+                    <td><span class="power-cell ${proc[2].replace(' ', '-')}">${proc[2]}</span></td>
+                    <td>${proc[3]}</td>
+                    <td>${proc[4]}</td>
+                `;
+                processList.appendChild(row);
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-dark: #000000;
+            --primary-light: #ffffff;
+            --accent-neon: #00ffaa;
+            --accent-purple: #5e17eb;
+            --accent-blue: #0070f3;
+            --danger: #ff2d55;
+            --success: #34c759;
+            --warning: #ffcc00;
+            --glass-bg: rgba(20, 20, 20, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+            color: var(--primary-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3),
+                        0 0 60px rgba(94, 23, 235, 0.2);
+            position: relative;
+        }
+        
+        h1 {
+            font-weight: 700;
+            font-size: 36px;
+            margin: 0 0 24px 0;
+            background: linear-gradient(to right, var(--accent-neon), var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        
+        h2 {
+            font-weight: 600;
+            font-size: 22px;
+            letter-spacing: -0.3px;
+            margin: 30px 0 15px 0;
+            color: var(--primary-light);
+        }
+        
+        p {
+            margin: 8px 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        button {
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--accent-purple);
+            color: var(--primary-light);
+            box-shadow: 0 4px 12px rgba(94, 23, 235, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(94, 23, 235, 0.4);
+            background: #6c2aef;
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button:disabled {
+            background: #333333;
+            color: #666666;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .danger {
+            background: var(--danger);
+            box-shadow: 0 4px 12px rgba(255, 45, 85, 0.3);
+        }
+        
+        .danger:hover {
+            background: #ff4d6d;
+            box-shadow: 0 6px 16px rgba(255, 45, 85, 0.4);
+        }
+        
+        .danger:disabled {
+            background: #442229;
+            color: #885566;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .redirect-button {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            padding: 15px 20px;
+            box-shadow: 0 8px 20px rgba(0, 112, 243, 0.3),
+                        0 0 15px rgba(94, 23, 235, 0.2);
+            z-index: 10;
+            border-radius: 50px;
+        }
+        
+        .redirect-button:hover {
+            transform: translateY(-50%) translateX(-3px);
+            box-shadow: 0 12px 24px rgba(0, 112, 243, 0.4),
+                        0 0 20px rgba(94, 23, 235, 0.3);
+        }
+        
+        .table-container {
+            height: 250px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        th {
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+            color: var(--primary-light);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+        
+        th:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        th:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+        
+        /* Column widths */
+        .col-pid {
+            width: 10%;
+        }
+        .col-name {
+            width: 20%;
+        }
+        .col-path {
+            width: 35%;
+        }
+        .col-hash {
+            width: 25%;
+        }
+        .col-status {
+            width: 10%;
+        }
+        
+        /* Row status coloring */
+        .row-malicious {
+            background-color: rgba(255, 45, 85, 0.15);
+            border-left: 3px solid var(--danger);
+        }
+        
+        .row-clean {
+            background-color: rgba(52, 199, 89, 0.1);
+            border-left: 3px solid var(--success);
+        }
+        
+        #scanStatus {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: none;
+            font-weight: 500;
+            font-size: 15px;
+            letter-spacing: 0.2px;
+        }
+        
+        .status-scanning {
+            background: linear-gradient(90deg, rgba(255, 204, 0, 0.1), rgba(255, 204, 0, 0.2));
+            border-left: 3px solid var(--warning);
+            color: var(--warning);
+            display: block !important;
+        }
+        
+        .status-complete {
+            background: linear-gradient(90deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.2));
+            border-left: 3px solid var(--success);
+            color: var(--success);
+            display: block !important;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .summary-card p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .summary-card span {
+            display: block;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        
+        .card-total span {
+            color: var(--accent-blue);
+        }
+        
+        .card-malicious span {
+            color: var(--danger);
+        }
+        
+        .card-clean span {
+            color: var(--success);
+        }
+        
+        /* Glow effects */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, var(--accent-neon), var(--accent-purple), var(--accent-blue), var(--accent-neon));
+            z-index: -1;
+            border-radius: 18px;
+            filter: blur(10px);
+            opacity: 0.15;
+            animation: glow 8s linear infinite;
+        }
+        
+        @keyframes glow {
+            0% { filter: blur(10px); opacity: 0.15; }
+            50% { filter: blur(15px); opacity: 0.25; }
+            100% { filter: blur(10px); opacity: 0.15; }
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-purple);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7b47fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Memory Scanner</h1>
+
+        <div class="button-group">
+            <button id="startScanBtn" onclick="startMemoryScan()">Start Memory Scan</button>
+            <button id="stopScanBtn" class="danger" onclick="stopMemoryScan()" disabled>Stop Scan</button>
+        </div>
+        
+        <div id="scanStatus">Scan not started</div>
+
+        <h2>Scan Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-card card-total">
+                <p>Total Files Scanned</p>
+                <span id="totalScanned">0</span>
+            </div>
+            <div class="summary-card card-malicious">
+                <p>Malicious Files Found</p>
+                <span id="maliciousCount">0</span>
+            </div>
+            <div class="summary-card card-clean">
+                <p>Clean Files</p>
+                <span id="cleanCount">0</span>
+            </div>
+        </div>
+
+        <h2>All Running Processes</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-pid">PID</th>
+                        <th class="col-name">Process Name</th>
+                        <th class="col-path">File Path</th>
+                        <th class="col-hash">Hash</th>
+                        <th class="col-status">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="processTable">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Redirect Button -->
+    <button class="redirect-button" onclick="window.location.href='http://127.0.0.1:5000/'">Go to Home</button>
+
+    <script>
+        let eventSource;
+        let isScanning = false;
+
+        function startMemoryScan() {
+            if (isScanning) return;
+            
+            // Clear previous results
+            document.getElementById('processTable').innerHTML = '';
+            document.getElementById('totalScanned').textContent = '0';
+            document.getElementById('maliciousCount').textContent = '0';
+            document.getElementById('cleanCount').textContent = '0';
+            
+            // Update UI state
+            isScanning = true;
+            document.getElementById('startScanBtn').disabled = true;
+            document.getElementById('stopScanBtn').disabled = false;
+            
+            const statusElement = document.getElementById('scanStatus');
+            statusElement.textContent = 'Scanning in progress...';
+            statusElement.className = 'status-scanning';
+            
+            if (eventSource) eventSource.close();
+            
+            eventSource = new EventSource('/memory_scan/start');
+            
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                // Update summary details
+                document.getElementById('totalScanned').textContent = data.total;
+                document.getElementById('maliciousCount').textContent = data.malicious;
+                document.getElementById('cleanCount').textContent = data.clean;
+
+                // Update process table
+                if (data.process) {
+                    const table = document.getElementById('processTable');
+                    const row = document.createElement('tr');
+                    
+                    // Add class based on status
+                    const isMalicious = data.process.status === 'Malicious';
+                    row.className = isMalicious ? 'row-malicious' : 'row-clean';
+                    
+                    row.innerHTML = `
+                        <td class="col-pid">${data.process.pid}</td>
+                        <td class="col-name">${data.process.name}</td>
+                        <td class="col-path">${data.process.path}</td>
+                        <td class="col-hash">${data.process.hash}</td>
+                        <td class="col-status">${data.process.status}</td>
+                    `;
+
+                    table.appendChild(row);
+                    
+                    // Auto-scroll to bottom to show newest entries
+                    const tableContainer = document.querySelector('.table-container');
+                    tableContainer.scrollTop = tableContainer.scrollHeight;
+                }
+                
+                // Check if scan is complete (server should send a special message)
+                if (data.complete === true) {
+                    completeScan();
+                }
+            };
+            
+            eventSource.onerror = function() {
+                completeScan();
+            };
+        }
+        
+        function completeScan() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            
+            isScanning = false;
+            document.getElementById('startScanBtn').disabled = false;
+            document.getElementById('stopScanBtn').disabled = true;
+            
+            const statusElement = document.getElementById('scanStatus');
+            statusElement.textContent = 'Scan completed!';
+            statusElement.className = 'status-complete';
+        }
+
+        function stopMemoryScan() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            
+            isScanning = false;
+            document.getElementById('startScanBtn').disabled = false;
+            document.getElementById('stopScanBtn').disabled = true;
+            
+            const statusElement = document.getElementById('scanStatus');
+            statusElement.textContent = 'Scan stopped by user.';
+            statusElement.className = 'status-complete';
+        }
+    </script>
+</body>
+</html>

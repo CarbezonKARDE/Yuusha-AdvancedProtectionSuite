@@ -1,0 +1,46 @@
+2025-04-16 22:07:14 Note: cipher 'AES-128-CBC' in --data-ciphers is not supported by ovpn-dco, disabling data channel offload.
+2025-04-16 22:07:14 OpenVPN 2.6.14 [git:v2.6.14/f588592ee6c6323b] Windows [SSL (OpenSSL)] [LZO] [LZ4] [PKCS11] [AEAD] [DCO] built on Apr  2 2025
+2025-04-16 22:07:14 Windows version 10.0 (Windows 10 or greater), amd64 executable
+2025-04-16 22:07:14 library versions: OpenSSL 3.4.1 11 Feb 2025, LZO 2.10
+2025-04-16 22:07:14 DCO version: 1.2.1
+2025-04-16 22:07:14 WARNING: No server certificate verification method has been enabled.  See http://openvpn.net/howto.html#mitm for more info.
+2025-04-16 22:07:14 TCP/UDP: Preserving recently used remote address: [AF_INET]220.83.128.89:1852
+2025-04-16 22:07:14 Socket Buffers: R=[65536->65536] S=[65536->65536]
+2025-04-16 22:07:14 UDPv4 link local: (not bound)
+2025-04-16 22:07:14 UDPv4 link remote: [AF_INET]220.83.128.89:1852
+2025-04-16 22:07:15 TLS: Initial packet from [AF_INET]220.83.128.89:1852, sid=0ce829b9 aabf23e8
+2025-04-16 22:07:15 VERIFY OK: depth=2, C=US, O=Internet Security Research Group, CN=ISRG Root X1
+2025-04-16 22:07:15 VERIFY OK: depth=1, C=US, O=Let's Encrypt, CN=R11
+2025-04-16 22:07:15 VERIFY OK: depth=0, CN=opengw.net
+2025-04-16 22:07:16 Control Channel: TLSv1.3, cipher TLSv1.3 TLS_AES_256_GCM_SHA384, peer certificate: 2048 bits RSA, signature: RSA-SHA256, peer temporary key: 253 bits X25519
+2025-04-16 22:07:16 [opengw.net] Peer Connection Initiated with [AF_INET]220.83.128.89:1852
+2025-04-16 22:07:16 TLS: move_session: dest=TM_ACTIVE src=TM_INITIAL reinit_src=1
+2025-04-16 22:07:16 TLS: tls_multi_process: initial untrusted session promoted to trusted
+2025-04-16 22:07:17 SENT CONTROL [opengw.net]: 'PUSH_REQUEST' (status=1)
+2025-04-16 22:07:18 PUSH: Received control message: 'PUSH_REPLY,ping 3,ping-restart 10,ifconfig 10.211.1.29 10.211.1.30,dhcp-option DNS 10.211.254.254,dhcp-option DNS 8.8.8.8,route-gateway 10.211.1.30,redirect-gateway def1'
+2025-04-16 22:07:18 OPTIONS IMPORT: --ifconfig/up options modified
+2025-04-16 22:07:18 OPTIONS IMPORT: route options modified
+2025-04-16 22:07:18 OPTIONS IMPORT: route-related options modified
+2025-04-16 22:07:18 OPTIONS IMPORT: --ip-win32 and/or --dhcp-option options modified
+2025-04-16 22:07:18 Using peer cipher 'AES-128-CBC'
+2025-04-16 22:07:18 interactive service msg_channel=0
+2025-04-16 22:07:18 ROUTE_GATEWAY 192.168.9.178/255.255.255.0 I=13 HWADDR=f8:5e:a0:03:78:b1
+2025-04-16 22:07:18 open_tun
+2025-04-16 22:07:18 tap-windows6 device [OpenVPN TAP-Windows6] opened
+2025-04-16 22:07:18 TAP-Windows Driver Version 9.27 
+2025-04-16 22:07:18 Notified TAP-Windows driver to set a DHCP IP/netmask of 10.211.1.29/255.255.255.252 on interface {CE4ABB68-A803-4F6B-A662-38F0AE19B9AD} [DHCP-serv: 10.211.1.30, lease-time: 31536000]
+2025-04-16 22:07:18 Successful ARP Flush on interface [24] {CE4ABB68-A803-4F6B-A662-38F0AE19B9AD}
+2025-04-16 22:07:18 IPv4 MTU set to 1500 on interface 24 using SetIpInterfaceEntry()
+2025-04-16 22:07:18 Data Channel: cipher 'AES-128-CBC', auth 'SHA1'
+2025-04-16 22:07:18 Timers: ping 3, ping-restart 10
+2025-04-16 22:07:23 TEST ROUTES: 1/1 succeeded len=0 ret=1 a=0 u/d=up
+2025-04-16 22:07:23 C:\WINDOWS\system32\route.exe ADD 220.83.128.89 MASK 255.255.255.255 192.168.9.178
+2025-04-16 22:07:23 ROUTE: CreateIpForwardEntry succeeded with dwForwardMetric1=35 and dwForwardType=4
+2025-04-16 22:07:23 Route addition via ipapi [adaptive] succeeded
+2025-04-16 22:07:23 C:\WINDOWS\system32\route.exe ADD 0.0.0.0 MASK 128.0.0.0 10.211.1.30
+2025-04-16 22:07:23 ROUTE: CreateIpForwardEntry succeeded with dwForwardMetric1=25 and dwForwardType=4
+2025-04-16 22:07:23 Route addition via ipapi [adaptive] succeeded
+2025-04-16 22:07:23 C:\WINDOWS\system32\route.exe ADD 128.0.0.0 MASK 128.0.0.0 10.211.1.30
+2025-04-16 22:07:23 ROUTE: CreateIpForwardEntry succeeded with dwForwardMetric1=25 and dwForwardType=4
+2025-04-16 22:07:23 Route addition via ipapi [adaptive] succeeded
+2025-04-16 22:07:23 Initialization Sequence Completed
