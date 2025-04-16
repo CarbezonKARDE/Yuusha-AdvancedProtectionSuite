@@ -6,7 +6,7 @@ import ctypes
 
 class VPNClient:
     def __init__(self):
-        self.OVPN_DIR = r"C:\Users\aikan\Downloads\AdvancedProtectionSuite\vpn_configs"
+        self.OVPN_DIR = r"path\to\Yuusha\vpn_configs"
         self.OPENVPN_PATH = r"C:\Program Files\OpenVPN\bin\openvpn.exe"
         self.LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'openvpn.log')
         
