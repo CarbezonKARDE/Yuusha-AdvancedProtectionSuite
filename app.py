@@ -21,7 +21,7 @@ vpn_client = VPNClient()  # Initialize VPNClient
 
 
 # Configuration
-DATABASE_PATH = r"C:\Users\aikan\Downloads\AdvancedProtectionSuite\Database\latestdata.db"
+DATABASE_PATH = r"path\to\Yuusha\Database\latestdata.db"
 scan_queue = queue.Queue()
 current_scan_thread = None
 stop_event = threading.Event()
