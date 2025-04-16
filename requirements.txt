@@ -1,0 +1,4 @@
+flask>=2.0.1
+cryptography>=35.0.0
+psutil>=5.8.0
+pywin32>=300
